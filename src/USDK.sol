@@ -70,19 +70,14 @@ contract USDK is IERC20 {
         emit Transfer(address(0), _to, _value);
     }
 
-    function burn(address _from, uint256 _value) external onlyOwner {
-        if (_from == address(0)) {
-            revert USDK__ZeroAddress();
-        }
-
-        if(s_balances[_from] < _value) {
+    function burn(uint256 _value) external onlyOwner {
+        if (s_balances[msg.sender] < _value) {
             revert USDK__InsufficientBalance();
         }
-
-        s_balances[_from] -= _value;
+        s_balances[msg.sender] -= _value;
         s_totalSupply -= _value;
 
-        emit Transfer(_from, address(0), _value);
+        emit Transfer(msg.sender, address(0), _value);
     }
 
 /**********************************************************/

@@ -74,18 +74,21 @@ contract USDKUnitTest is Test {
 
         // burn
         uint256 amountToBurn = 1;
+        vm.prank(alice);
+        usdk.transfer(owner, amountToBurn);
         vm.expectEmit(true, true, false, true);
-        emit Transfer(alice, zeroAddress, amountToBurn);
+        emit Transfer(owner, zeroAddress, amountToBurn);
         vm.startPrank(owner);
-        usdk.burn(alice, amountToBurn);
+        usdk.burn(amountToBurn);
         vm.stopPrank();
         assertEq(usdk.balanceOf(alice), AMOUNT_TO_MINT - amountToBurn);
 
         // burn out  of balance
         uint256 outOfBalance = 1000;
+
         vm.expectRevert(USDK.USDK__InsufficientBalance.selector);
         vm.prank(owner);
-        usdk.burn(alice, outOfBalance);
+        usdk.burn(outOfBalance);
     }
 
     function testCanAnyoneMintOrBurn() public mintSomeToken {
@@ -95,7 +98,7 @@ contract USDKUnitTest is Test {
 
         vm.expectRevert(USDK.USDK_InvalidOwner.selector);
         vm.prank(alice);
-        usdk.burn(alice, 1);
+        usdk.burn(1);
     }
 
 /**********************************************************/
@@ -111,8 +114,6 @@ contract USDKUnitTest is Test {
         vm.startPrank(owner);
         vm.expectRevert(USDK.USDK__ZeroAddress.selector);
         usdk.mint(zeroAddress, AMOUNT_TO_MINT);
-        vm.expectRevert(USDK.USDK__ZeroAddress.selector);
-        usdk.burn(zeroAddress, 1);
         vm.stopPrank();
 
         // transfer and approve

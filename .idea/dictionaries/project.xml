@@ -2,6 +2,9 @@
   <dictionary name="project">
     <words>
       <w>ierc</w>
+      <w>openzeppelin</w>
+      <w>pricefeed</w>
+      <w>weth</w>
     </words>
   </dictionary>
 </component>

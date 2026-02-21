@@ -46,7 +46,7 @@ contract Handler is Test, MockAddress {
         _value = bound(_value, 0, _value); // allow revert happens
         vm.prank(owner);
         ghostBurned += _value;
-        usdk.burn(addresses[_userIdx], _value);
+        usdk.burn(_value);
     }
 
     function transfer(uint256 _fromUserIdx, uint256 _toUserIdx, uint256 _value) public {
