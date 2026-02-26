@@ -67,6 +67,7 @@ contract USDKEngine is ReentrancyGuard {
     error USDKEngine_FrozenPrice();
     error USDKEngine_ExceedMaximumValue();
     error USDKEngine_AccountIsHealthy();
+    error USDKEngine_HealthFactorMustBeRaised();
 
     /**
      *
@@ -217,37 +218,36 @@ contract USDKEngine is ReentrancyGuard {
         if (account == address(0)) {
             revert USDKEngine_ZeroAddress();
         }
-        if (_healthFactor(account) >= MIN_HEALTH_FACTOR) {
+        uint256 healthFactorBefore = _healthFactor(account);
+        if (healthFactorBefore >= MIN_HEALTH_FACTOR) {
             revert USDKEngine_AccountIsHealthy();
         }
         if (s_userCollateral[account][collateralToken] == 0) {
             revert USDKEngine_InsufficientCollateralToRedeem();
         }
-        uint256 debt = s_debt[account];
-        uint256 maxDebtToCover = debt * MAX_DEBT_TO_COVER / LIQUIDATION_PRECISION;
+        uint256 maxDebtToCover = _getMaxDebtToCover(account);
         if (debtToCover > maxDebtToCover) {
             revert USDKEngine_ExceedMaximumValue();
         }
-        // bonus
-        uint256 valueWithBonus= debtToCover + (debtToCover * LIQUIDATION_BONUS / LIQUIDATION_PRECISION);
-        uint256 amountToRedeem = _getTokenAmountByUsd(collateralToken, valueWithBonus);
-        uint256 userCollateralAmount = s_userCollateral[account][collateralToken];
-        if (amountToRedeem > userCollateralAmount) {
-            // (new debtToCover + bonus) / tokenValue = userCollateralAmount
-            // new debtToCover = userCollateralAmount * tokenValue / (1 + LIQUIDATION_BONUS)
-            debtToCover = _getUsdValue(collateralToken, userCollateralAmount) * LIQUIDATION_PRECISION / (LIQUIDATION_PRECISION + LIQUIDATION_BONUS);
-            amountToRedeem = userCollateralAmount;
-        }
 
-        bool success = i_usdk.transferFrom(msg.sender, address(this), debtToCover);
+        (uint256 finalDebtToCover, uint256 amountToRedeem,) =
+            _getLiquidationAmounts(account, collateralToken, debtToCover);
+
+        bool success = i_usdk.transferFrom(msg.sender, address(this), finalDebtToCover);
         if (!success) {
             revert USDKEngine_TransferFailed();
         }
-        i_usdk.burn(debtToCover);
-        s_debt[account] -= debtToCover;
+        i_usdk.burn(finalDebtToCover);
+        s_debt[account] -= finalDebtToCover;
         _redeem(account, msg.sender, collateralToken, amountToRedeem);
 
-        emit Liquidate(account, msg.sender, debtToCover);
+        // HF must be raised
+        uint256 healthFactorAfter = _healthFactor(account);
+        if (healthFactorAfter <= healthFactorBefore) {
+            revert USDKEngine_HealthFactorMustBeRaised();
+        }
+
+        emit Liquidate(account, msg.sender, finalDebtToCover);
     }
 
     /**
@@ -257,6 +257,58 @@ contract USDKEngine is ReentrancyGuard {
     /**
      *
      */
+    function getUserCollateral(address account, address token) external view returns (uint256) {
+        return s_userCollateral[account][token];
+    }
+
+    function getUserDebt(address account) external view returns (uint256) {
+        return s_debt[account];
+    }
+
+    function getHealthFactor(address account) external view returns (uint256) {
+        return _healthFactor(account);
+    }
+
+    function getUserTotalCollateralUsd(address account) external view returns (uint256) {
+        return _getUserTotalCollateralUsd(account);
+    }
+
+    function getCollateralTokens() external view returns (address[] memory) {
+        return s_tokenList;
+    }
+
+    function isAllowedCollateral(address token) external view returns (bool) {
+        return s_allowedToken[token];
+    }
+
+    function getCollateralConfig(address token)
+        external
+        view
+        returns (address priceFeed, uint256 liquidationThreshold)
+    {
+        CollateralConfig memory config = s_collateralConfigs[token];
+        return (config.priceFeed, config.liquidationThreshold);
+    }
+
+    function getTokenUsdPrice(address token) external view returns (uint256) {
+        return _getTokenUsdPrice(token);
+    }
+
+    function getMaxDeptToCover(address account) external view returns (uint256) {
+        return _getMaxDebtToCover(account);
+    }
+
+    function getLiquidationAmounts(address account, address collateralToken, uint256 debtToCover)
+        external
+        view
+        returns (uint256 finalDebtToCover, uint256 collateralAmount, uint256 totalUsdWithBonus)
+    {
+        return _getLiquidationAmounts(account, collateralToken, debtToCover);
+    }
+
+    function getTotalDebt() external view returns (uint256) {
+        return i_usdk.totalSupply();
+    }
 
     /**
      *
@@ -265,6 +317,16 @@ contract USDKEngine is ReentrancyGuard {
     /**
      *
      */
+    function calculateHealthFactor(uint256 collateralUsd, uint256 debt) public pure returns (uint256) {
+        if(debt == 0) {
+            return type(uint256).max;
+        }
+        return collateralUsd * PRECISION / debt;
+    }
+
+    function calculateBonus(uint256 amount) public pure returns (uint256) {
+        return amount * LIQUIDATION_BONUS / LIQUIDATION_PRECISION;
+    }
 
     /**
      *
@@ -283,8 +345,16 @@ contract USDKEngine is ReentrancyGuard {
             return type(uint256).max;
         }
 
+        uint256 sum = _getUserTotalCollateralUsd(_account);
+
+        return calculateHealthFactor(sum, debt);
+    }
+
+    function _getUserTotalCollateralUsd(address _account) internal view returns (uint256) {
         uint256 sum;
-        for (uint256 i; i < s_tokenList.length; ++i) {
+        uint256 allowedTokenAmount = s_tokenList.length;
+
+        for (uint256 i; i < allowedTokenAmount; ++i) {
             address _token = s_tokenList[i];
             uint256 userCollateralAmount = s_userCollateral[_account][_token];
             if (userCollateralAmount > 0) {
@@ -292,32 +362,27 @@ contract USDKEngine is ReentrancyGuard {
                 sum += _getUsdValue(_token, userCollateralAmount) * threshold / LIQUIDATION_THRESHOLD_PRECISION;
             }
         }
-
-        return sum * PRECISION / debt;
+        return sum;
     }
 
     function _getUsdValue(address _token, uint256 _amount) internal view returns (uint256) {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(s_collateralConfigs[_token].priceFeed);
-        (, int256 answer,, uint256 updatedAt,) = priceFeed.latestRoundData();
-        if (answer <= 0) {
-            revert USDKEngine_PriceMustBeMoreThanZero();
-        }
-        if (block.timestamp - updatedAt > MAX_DELAY) {
-            revert USDKEngine_FrozenPrice();
-        }
-        uint256 price = uint256(answer);
-
-        uint8 priceDecimals = priceFeed.decimals();
         uint8 tokenDecimals = IERC20(_token).decimals();
-
-        // normalize to 1e18
-        uint256 adjustedPrice = (price * PRECISION) / (10 ** uint256(priceDecimals));
+        uint256 adjustedPrice = _getTokenUsdPrice(_token);
         uint256 adjustAmount = (_amount * PRECISION) / (10 ** uint256(tokenDecimals));
 
         return (adjustedPrice * adjustAmount) / PRECISION;
     }
 
     function _getTokenAmountByUsd(address _token, uint256 _usd) internal view returns (uint256) {
+        uint256 price = _getTokenUsdPrice(_token);
+        uint8 tokenDecimals = IERC20(_token).decimals();
+
+        uint256 amountIn18 = _usd * PRECISION / price;
+
+        return amountIn18 * (10 ** uint256(tokenDecimals)) / PRECISION;
+    }
+
+    function _getTokenUsdPrice(address _token) internal view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_collateralConfigs[_token].priceFeed);
         (, int256 answer,, uint256 updatedAt,) = priceFeed.latestRoundData();
         if (answer <= 0) {
@@ -326,12 +391,16 @@ contract USDKEngine is ReentrancyGuard {
         if (block.timestamp - updatedAt > MAX_DELAY) {
             revert USDKEngine_FrozenPrice();
         }
+
+        // normalize to 1e18
         uint256 price = uint256(answer);
-
         uint8 priceDecimals = priceFeed.decimals();
-        uint256 adjustedPrice = (price * PRECISION) / (10 ** uint256(priceDecimals));
+        return (price * PRECISION) / (10 ** uint256(priceDecimals));
+    }
 
-        return _usd * PRECISION / adjustedPrice;
+    function _getMaxDebtToCover(address _account) internal view returns (uint256) {
+        uint256 debt = s_debt[_account];
+        return debt * MAX_DEBT_TO_COVER / LIQUIDATION_PRECISION;
     }
 
     function _revertIfBreakHealthFactor(address _account) internal {
@@ -379,5 +448,25 @@ contract USDKEngine is ReentrancyGuard {
         }
         s_debt[_account] -= _amount;
         i_usdk.burn(_amount);
+    }
+
+    function _getLiquidationAmounts(address _account, address _collateralToken, uint256 _debtToCover)
+        internal
+        view
+        returns (uint256 finalDebtToCover, uint256 collateralAmount, uint256 totalUsdWithBonus)
+    {
+        uint256 totalUsdWithBonus = _debtToCover + calculateBonus(_debtToCover);
+        uint256 amountToRedeem = _getTokenAmountByUsd(_collateralToken, totalUsdWithBonus);
+        uint256 userCollateralAmount = s_userCollateral[_account][_collateralToken];
+        if (amountToRedeem > userCollateralAmount) {
+            // (new debtToCover + bonus) / tokenValue = userCollateralAmount
+            // new debtToCover = userCollateralAmount * tokenValue / (1 + LIQUIDATION_BONUS)
+            _debtToCover = _getUsdValue(_collateralToken, userCollateralAmount) * LIQUIDATION_PRECISION
+                / (LIQUIDATION_PRECISION + LIQUIDATION_BONUS);
+            totalUsdWithBonus = _debtToCover + calculateBonus(_debtToCover);
+            amountToRedeem = userCollateralAmount;
+        }
+
+        return (_debtToCover, amountToRedeem, totalUsdWithBonus);
     }
 }
