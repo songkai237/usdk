@@ -14,7 +14,7 @@ contract USDK is IERC20 {
 /*                    State variables                     */
 /**********************************************************/
 
-    address immutable private i_owner;
+    address private s_owner;
     string private s_name;
     string private s_symbol;
 
@@ -36,7 +36,7 @@ contract USDK is IERC20 {
 /**********************************************************/
 
     modifier onlyOwner() {
-        if (msg.sender != i_owner) {
+        if (msg.sender != s_owner) {
             revert USDK_InvalidOwner();
         }
         _;
@@ -52,7 +52,7 @@ contract USDK is IERC20 {
         }
         s_name = _name;
         s_symbol = _symbol;
-        i_owner = _owner;
+        s_owner = _owner;
     }
 
 /**********************************************************/
@@ -79,13 +79,17 @@ contract USDK is IERC20 {
 
         emit Transfer(msg.sender, address(0), _value);
     }
+    
+    function changeOwner(address _newOwner) external onlyOwner {
+        s_owner = _newOwner;
+    }
 
 /**********************************************************/
 /*                     External view                      */
 /**********************************************************/
 
     function owner() external view returns (address) {
-        return i_owner;
+        return s_owner;
     }
 
     // external pure
