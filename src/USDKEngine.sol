@@ -310,6 +310,10 @@ contract USDKEngine is ReentrancyGuard {
         return i_usdk.totalSupply();
     }
 
+    function getUsdkAddr() external view returns (address) {
+        return address(i_usdk);
+    }
+
     /**
      *
      */
@@ -455,7 +459,7 @@ contract USDKEngine is ReentrancyGuard {
         view
         returns (uint256 finalDebtToCover, uint256 collateralAmount, uint256 totalUsdWithBonus)
     {
-        uint256 totalUsdWithBonus = _debtToCover + calculateBonus(_debtToCover);
+        totalUsdWithBonus = _debtToCover + calculateBonus(_debtToCover);
         uint256 amountToRedeem = _getTokenAmountByUsd(_collateralToken, totalUsdWithBonus);
         uint256 userCollateralAmount = s_userCollateral[_account][_collateralToken];
         if (amountToRedeem > userCollateralAmount) {

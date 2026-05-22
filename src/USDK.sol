@@ -152,6 +152,13 @@ contract USDK is IERC20 {
         return s_allowances[_owner][_spender];
     }
 
+    function transferOwnership(address _newOwner) external onlyOwner {
+        if (_newOwner == address(0)) {
+            revert USDK__ZeroAddress();
+        }
+        s_owner = _newOwner;
+    }
+
 /**********************************************************/
 /*                        Internal                        */
 /**********************************************************/
