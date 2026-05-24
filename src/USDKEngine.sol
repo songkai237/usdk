@@ -407,7 +407,7 @@ contract USDKEngine is ReentrancyGuard {
         return debt * MAX_DEBT_TO_COVER / LIQUIDATION_PRECISION;
     }
 
-    function _revertIfBreakHealthFactor(address _account) internal {
+    function _revertIfBreakHealthFactor(address _account) internal view {
         if (_healthFactor(_account) < MIN_HEALTH_FACTOR) {
             revert USDKEngine_BreakHealthFactor();
         }
