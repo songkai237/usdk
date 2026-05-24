@@ -7,7 +7,7 @@ import {USDK} from "../../src/USDK.sol";
 contract USDKUnitTest is Test {
     USDK public usdk;
 
-    uint256 constant public AMOUNT_TO_MINT = 10;
+    uint256 public constant AMOUNT_TO_MINT = 10;
 
     address public owner = makeAddr("owner");
     string public name = "USDK Token";
@@ -25,10 +25,14 @@ contract USDKUnitTest is Test {
         usdk = new USDK(name, symbol, owner);
     }
 
-/**********************************************************/
-/*                       Modifiers                        */
-/**********************************************************/
-    modifier mintSomeToken {
+    /**
+     *
+     */
+    /*                       Modifiers                        */
+    /**
+     *
+     */
+    modifier mintSomeToken() {
         vm.startPrank(owner);
         usdk.mint(alice, AMOUNT_TO_MINT);
         usdk.mint(bob, AMOUNT_TO_MINT);
@@ -43,9 +47,13 @@ contract USDKUnitTest is Test {
         _;
     }
 
-/**********************************************************/
-/*                       Init test                        */
-/**********************************************************/
+    /**
+     *
+     */
+    /*                       Init test                        */
+    /**
+     *
+     */
     function testInitializationCorrectly() public {
         assertEq(usdk.name(), name);
         assertEq(usdk.symbol(), symbol);
@@ -60,9 +68,13 @@ contract USDKUnitTest is Test {
         usdk.transfer(bob, 1000);
     }
 
-/**********************************************************/
-/*                  Access control test                   */
-/**********************************************************/
+    /**
+     *
+     */
+    /*                  Access control test                   */
+    /**
+     *
+     */
     function testMintAndBurn() public {
         // mint
         vm.expectEmit(true, true, false, true);
@@ -101,9 +113,13 @@ contract USDKUnitTest is Test {
         usdk.burn(1);
     }
 
-/**********************************************************/
-/*                   Zero address test                    */
-/**********************************************************/
+    /**
+     *
+     */
+    /*                   Zero address test                    */
+    /**
+     *
+     */
     function testDeployWithZeroAddressOwner() public {
         vm.expectRevert(USDK.USDK__ZeroAddress.selector);
         USDK tmp = new USDK(name, symbol, zeroAddress);
@@ -132,9 +148,13 @@ contract USDKUnitTest is Test {
         usdk.transferFrom(bob, zeroAddress, 1);
     }
 
-/**********************************************************/
-/*                    Allowance test                     */
-/**********************************************************/
+    /**
+     *
+     */
+    /*                    Allowance test                     */
+    /**
+     *
+     */
     function testAllowanceCorrect() public mintSomeToken {
         vm.expectEmit(true, true, false, true);
         emit Approval(alice, bob, 2);
@@ -157,9 +177,13 @@ contract USDKUnitTest is Test {
         vm.stopPrank();
     }
 
-/**********************************************************/
-/*                     Stateless fuzz                     */
-/**********************************************************/
+    /**
+     *
+     */
+    /*                     Stateless fuzz                     */
+    /**
+     *
+     */
     function testFuzzTransfer(uint256 _amountToTransfer) public mintToAddress(alice, 10 ether) {
         _amountToTransfer = bound(_amountToTransfer, 0, 10 ether);
 

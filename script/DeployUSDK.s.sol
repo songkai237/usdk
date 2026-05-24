@@ -38,8 +38,7 @@ contract DeployUSDK is Script {
 
         vm.startPrank(owner);
         USDK usdk = new USDK("USDK", "USDK", owner);
-        USDKEngine engine =
-            new USDKEngine(address(usdk), tokenAddresses, priceFeedAddresses, liquidationThresholds);
+        USDKEngine engine = new USDKEngine(address(usdk), tokenAddresses, priceFeedAddresses, liquidationThresholds);
         usdk.transferOwnership(address(engine));
         vm.stopPrank();
 

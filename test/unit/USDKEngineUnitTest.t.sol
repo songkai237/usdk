@@ -41,7 +41,7 @@ contract USDKEngineUnitTest is Test {
     event Burn(address indexed _account, uint256 amount);
     event Liquidate(address indexed _account, address indexed _liquidator, uint256 debtToCover);
 
-    modifier depositCollateral {
+    modifier depositCollateral() {
         _deposit(alice, address(weth), AMOUNT_TO_DEPOSIT);
         _;
     }

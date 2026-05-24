@@ -10,10 +10,13 @@ import {IERC20} from "./interface/IERC20.sol";
 contract USDK is IERC20 {
     // Type
 
-/**********************************************************/
-/*                    State variables                     */
-/**********************************************************/
-
+    /**
+     *
+     */
+    /*                    State variables                     */
+    /**
+     *
+     */
     address private s_owner;
     string private s_name;
     string private s_symbol;
@@ -22,19 +25,25 @@ contract USDK is IERC20 {
     mapping(address account => uint256) private s_balances;
     mapping(address account => mapping(address spender => uint256)) private s_allowances;
 
-/**********************************************************/
-/*                         Errors                         */
-/**********************************************************/
-
+    /**
+     *
+     */
+    /*                         Errors                         */
+    /**
+     *
+     */
     error USDK__ZeroAddress();
     error USDK__InsufficientBalance();
     error USDK__InsufficientAllowance();
     error USDK_InvalidOwner();
 
-/**********************************************************/
-/*                       Modifiers                        */
-/**********************************************************/
-
+    /**
+     *
+     */
+    /*                       Modifiers                        */
+    /**
+     *
+     */
     modifier onlyOwner() {
         if (msg.sender != s_owner) {
             revert USDK_InvalidOwner();
@@ -42,11 +51,14 @@ contract USDK is IERC20 {
         _;
     }
 
-/**********************************************************/
-/*                      Constructor                       */
-/**********************************************************/
-
-    constructor(string memory _name, string memory _symbol, address _owner){
+    /**
+     *
+     */
+    /*                      Constructor                       */
+    /**
+     *
+     */
+    constructor(string memory _name, string memory _symbol, address _owner) {
         if (_owner == address(0)) {
             revert USDK__ZeroAddress();
         }
@@ -55,10 +67,13 @@ contract USDK is IERC20 {
         s_owner = _owner;
     }
 
-/**********************************************************/
-/*                        External                        */
-/**********************************************************/
-
+    /**
+     *
+     */
+    /*                        External                        */
+    /**
+     *
+     */
     function mint(address _to, uint256 _value) external onlyOwner {
         if (_to == address(0)) {
             revert USDK__ZeroAddress();
@@ -79,25 +94,31 @@ contract USDK is IERC20 {
 
         emit Transfer(msg.sender, address(0), _value);
     }
-    
+
     function changeOwner(address _newOwner) external onlyOwner {
         s_owner = _newOwner;
     }
 
-/**********************************************************/
-/*                     External view                      */
-/**********************************************************/
-
+    /**
+     *
+     */
+    /*                     External view                      */
+    /**
+     *
+     */
     function owner() external view returns (address) {
         return s_owner;
     }
 
     // external pure
 
-/**********************************************************/
-/*                         Public                         */
-/**********************************************************/
-
+    /**
+     *
+     */
+    /*                         Public                         */
+    /**
+     *
+     */
     function name() public view returns (string memory) {
         return s_name;
     }
@@ -159,10 +180,13 @@ contract USDK is IERC20 {
         s_owner = _newOwner;
     }
 
-/**********************************************************/
-/*                        Internal                        */
-/**********************************************************/
-
+    /**
+     *
+     */
+    /*                        Internal                        */
+    /**
+     *
+     */
     function _transfer(address _from, address _to, uint256 _value) internal {
         if (_from == address(0)) {
             revert USDK__ZeroAddress();

@@ -322,7 +322,7 @@ contract USDKEngine is ReentrancyGuard {
      *
      */
     function calculateHealthFactor(uint256 collateralUsd, uint256 debt) public pure returns (uint256) {
-        if(debt == 0) {
+        if (debt == 0) {
             return type(uint256).max;
         }
         return collateralUsd * PRECISION / debt;
