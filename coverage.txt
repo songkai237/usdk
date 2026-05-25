@@ -1,182 +1,265 @@
-Compiling 22 files with Solc 0.8.24
-Solc 0.8.24 finished in 4.15s
+Compiling 42 files with Solc 0.8.24
+Solc 0.8.24 finished in 7.93s
 Compiler run successful with warnings:
 Warning (2072): Unused local variable.
-  --> test/unit/USDKUnitTest.t.sol:88:9:
-   |
-88 |         USDK tmp = new USDK(name, symbol, zeroAddress);
-   |         ^^^^^^^^
+   --> test/unit/USDKUnitTest.t.sol:125:9:
+    |
+125 |         USDK tmp = new USDK(name, symbol, zeroAddress);
+    |         ^^^^^^^^
 
 Warning (2018): Function state mutability can be restricted to view
-  --> test/unit/USDKUnitTest.t.sol:43:5:
+  --> script/HelperConfig.s.sol:33:5:
    |
-43 |     function testInitializationCorrectly() public {
+33 |     function getSepoliaConfig() private returns (NetworkConfig memory sepoliaNetworkConfig) {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to view
+  --> test/invariant/Handler.t.sol:22:5:
+   |
+22 |     function totalSupply() public returns (uint256) {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to view
+  --> test/invariant/Handler.t.sol:26:5:
+   |
+26 |     function allBalances() public returns (uint256) {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to view
+  --> test/unit/USDKUnitTest.t.sol:57:5:
+   |
+57 |     function testInitializationCorrectly() public {
    |     ^ (Relevant source part starts here and spans across multiple lines).
 
 Analysing contracts...
 Running tests...
 
-Ran 6 tests for test/unit/USDKUnitTest.t.sol:USDKUnitTest
-[PASS] testAllowanceCorrect() (gas: 163136)
-[PASS] testCanAnyoneMintOrBurn() (gas: 95124)
-[PASS] testDeployWithZeroAddressOwner() (gas: 46369)
-[PASS] testInitializationCorrectly() (gas: 32531)
-[PASS] testMintAndBurn() (gas: 78411)
-[PASS] testZeroAddress() (gas: 116583)
-Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 1.81ms (1.96ms CPU time)
+Ran 1 test for test/invariant/USDKInvariant.t.sol:USDKInvariantTest
+[PASS] statefulFuzz_sumOfBalancesEqualsTotalSupply() (runs: 1000, calls: 32000, reverts: 14353)
 
-Ran 1 test suite in 299.34ms (1.81ms CPU time): 6 tests passed, 0 failed, 0 skipped (6 total tests)
-Uncovered for src/USDK.sol:
-- Branch (branch: 4, path: 0) (location: (source ID: 19, lines: 78..81, bytes: 2417..2476), hits: 0)
-- Line (location: (source ID: 19, lines: 79..80, bytes: 2431..2465), hits: 0)
-- Statement (location: (source ID: 19, lines: 79..80, bytes: 2431..2465), hits: 0)
-- Line (location: (source ID: 19, lines: 124..125, bytes: 3694..3705), hits: 0)
-- Statement (location: (source ID: 19, lines: 124..125, bytes: 3694..3705), hits: 0)
-- Branch (branch: 8, path: 0) (location: (source ID: 19, lines: 161..164, bytes: 4942..4993), hits: 0)
-- Line (location: (source ID: 19, lines: 162..163, bytes: 4956..4982), hits: 0)
-- Statement (location: (source ID: 19, lines: 162..163, bytes: 4956..4982), hits: 0)
-- Branch (branch: 10, path: 0) (location: (source ID: 19, lines: 167..170, bytes: 5117..5176), hits: 0)
-- Line (location: (source ID: 19, lines: 168..169, bytes: 5131..5165), hits: 0)
-- Statement (location: (source ID: 19, lines: 168..169, bytes: 5131..5165), hits: 0)
+╭--------------+------------------------+-------+---------+----------╮
+| Contract     | Selector               | Calls | Reverts | Discards |
++====================================================================+
+| TokenHandler | approveAndTransferFrom | 7980  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| TokenHandler | burn                   | 7982  | 7898    | 0        |
+|--------------+------------------------+-------+---------+----------|
+| TokenHandler | mint                   | 7957  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| TokenHandler | transfer               | 8081  | 6455    | 0        |
+╰--------------+------------------------+-------+---------+----------╯
 
-Anchors for Contract "USDK" (solc 0.8.24, source ID 19):
-- creation IC 5 -> Item 7: Line (location: (source ID: 19, lines: 49..57, bytes: 1518..1760), hits: 7)
-- creation IC 5 -> Item 8: Function "constructor" (location: (source ID: 19, lines: 49..57, bytes: 1518..1760), hits: 7)
-- creation IC 55 -> Item 9: Line (location: (source ID: 19, lines: 50..51, bytes: 1603..1623), hits: 7)
-- creation IC 55 -> Item 10: Statement (location: (source ID: 19, lines: 50..51, bytes: 1603..1623), hits: 7)
-- creation IC 107 -> Item 11: Branch (branch: 1, path: 0) (location: (source ID: 19, lines: 50..53, bytes: 1625..1676), hits: 1)
-- creation IC 107 -> Item 12: Line (location: (source ID: 19, lines: 51..52, bytes: 1639..1665), hits: 1)
-- creation IC 107 -> Item 13: Statement (location: (source ID: 19, lines: 51..52, bytes: 1639..1665), hits: 1)
-- creation IC 157 -> Item 14: Line (location: (source ID: 19, lines: 53..54, bytes: 1685..1699), hits: 6)
-- creation IC 157 -> Item 15: Statement (location: (source ID: 19, lines: 53..54, bytes: 1685..1699), hits: 6)
-- creation IC 174 -> Item 16: Line (location: (source ID: 19, lines: 54..55, bytes: 1709..1727), hits: 6)
-- creation IC 174 -> Item 17: Statement (location: (source ID: 19, lines: 54..55, bytes: 1709..1727), hits: 6)
-- creation IC 192 -> Item 18: Line (location: (source ID: 19, lines: 55..56, bytes: 1737..1753), hits: 6)
-- creation IC 192 -> Item 19: Statement (location: (source ID: 19, lines: 55..56, bytes: 1737..1753), hits: 6)
--  runtime IC 1516 -> Item 0: Line (location: (source ID: 19, lines: 38..44, bytes: 1202..1328), hits: 9)
--  runtime IC 1516 -> Item 1: Function "onlyOwner" (location: (source ID: 19, lines: 38..44, bytes: 1202..1328), hits: 9)
--  runtime IC 1516 -> Item 2: Line (location: (source ID: 19, lines: 39..40, bytes: 1237..1258), hits: 9)
--  runtime IC 1516 -> Item 3: Statement (location: (source ID: 19, lines: 39..40, bytes: 1237..1258), hits: 9)
--  runtime IC 1599 -> Item 4: Branch (branch: 0, path: 0) (location: (source ID: 19, lines: 39..42, bytes: 1260..1311), hits: 1)
--  runtime IC 1599 -> Item 5: Line (location: (source ID: 19, lines: 40..41, bytes: 1274..1300), hits: 1)
--  runtime IC 1599 -> Item 6: Statement (location: (source ID: 19, lines: 40..41, bytes: 1274..1300), hits: 1)
--  runtime IC 368 -> Item 20: Line (location: (source ID: 19, lines: 62..72, bytes: 1950..2220), hits: 9)
--  runtime IC 368 -> Item 21: Function "mint" (location: (source ID: 19, lines: 62..72, bytes: 1950..2220), hits: 9)
--  runtime IC 1649 -> Item 22: Line (location: (source ID: 19, lines: 63..64, bytes: 2026..2043), hits: 8)
--  runtime IC 1649 -> Item 23: Statement (location: (source ID: 19, lines: 63..64, bytes: 2026..2043), hits: 8)
--  runtime IC 1700 -> Item 24: Branch (branch: 2, path: 0) (location: (source ID: 19, lines: 63..66, bytes: 2045..2096), hits: 1)
--  runtime IC 1700 -> Item 25: Line (location: (source ID: 19, lines: 64..65, bytes: 2059..2085), hits: 1)
--  runtime IC 1700 -> Item 26: Statement (location: (source ID: 19, lines: 64..65, bytes: 2059..2085), hits: 1)
--  runtime IC 1750 -> Item 27: Line (location: (source ID: 19, lines: 67..68, bytes: 2106..2129), hits: 7)
--  runtime IC 1750 -> Item 28: Statement (location: (source ID: 19, lines: 67..68, bytes: 2106..2129), hits: 7)
--  runtime IC 1774 -> Item 29: Line (location: (source ID: 19, lines: 68..69, bytes: 2139..2164), hits: 7)
--  runtime IC 1774 -> Item 30: Statement (location: (source ID: 19, lines: 68..69, bytes: 2139..2164), hits: 7)
--  runtime IC 1857 -> Item 31: Line (location: (source ID: 19, lines: 70..71, bytes: 2175..2213), hits: 7)
--  runtime IC 1857 -> Item 32: Statement (location: (source ID: 19, lines: 70..71, bytes: 2175..2213), hits: 7)
--  runtime IC 504 -> Item 33: Line (location: (source ID: 19, lines: 73..87, bytes: 2226..2604), hits: 3)
--  runtime IC 504 -> Item 34: Function "burn" (location: (source ID: 19, lines: 73..87, bytes: 2226..2604), hits: 3)
--  runtime IC 2348 -> Item 35: Line (location: (source ID: 19, lines: 74..75, bytes: 2304..2323), hits: 2)
--  runtime IC 2348 -> Item 36: Statement (location: (source ID: 19, lines: 74..75, bytes: 2304..2323), hits: 2)
--  runtime IC 2399 -> Item 37: Branch (branch: 3, path: 0) (location: (source ID: 19, lines: 74..77, bytes: 2325..2376), hits: 1)
--  runtime IC 2399 -> Item 38: Line (location: (source ID: 19, lines: 75..76, bytes: 2339..2365), hits: 1)
--  runtime IC 2399 -> Item 39: Statement (location: (source ID: 19, lines: 75..76, bytes: 2339..2365), hits: 1)
--  runtime IC 2449 -> Item 40: Line (location: (source ID: 19, lines: 78..79, bytes: 2389..2415), hits: 1)
--  runtime IC 2449 -> Item 41: Statement (location: (source ID: 19, lines: 78..79, bytes: 2389..2415), hits: 1)
--  runtime IC 2518 -> Item 42: Branch (branch: 4, path: 0) (location: (source ID: 19, lines: 78..81, bytes: 2417..2476), hits: 0)
--  runtime IC 2518 -> Item 43: Line (location: (source ID: 19, lines: 79..80, bytes: 2431..2465), hits: 0)
--  runtime IC 2518 -> Item 44: Statement (location: (source ID: 19, lines: 79..80, bytes: 2431..2465), hits: 0)
--  runtime IC 2568 -> Item 45: Line (location: (source ID: 19, lines: 82..83, bytes: 2486..2513), hits: 1)
--  runtime IC 2568 -> Item 46: Statement (location: (source ID: 19, lines: 82..83, bytes: 2486..2513), hits: 1)
--  runtime IC 2651 -> Item 47: Line (location: (source ID: 19, lines: 83..84, bytes: 2523..2546), hits: 1)
--  runtime IC 2651 -> Item 48: Statement (location: (source ID: 19, lines: 83..84, bytes: 2523..2546), hits: 1)
--  runtime IC 2675 -> Item 49: Line (location: (source ID: 19, lines: 85..86, bytes: 2557..2597), hits: 1)
--  runtime IC 2675 -> Item 50: Statement (location: (source ID: 19, lines: 85..86, bytes: 2557..2597), hits: 1)
--  runtime IC 444 -> Item 51: Line (location: (source ID: 19, lines: 92..95, bytes: 2794..2874), hits: 1)
--  runtime IC 444 -> Item 52: Function "owner" (location: (source ID: 19, lines: 92..95, bytes: 2794..2874), hits: 1)
--  runtime IC 2033 -> Item 53: Line (location: (source ID: 19, lines: 93..94, bytes: 2853..2867), hits: 1)
--  runtime IC 2033 -> Item 54: Statement (location: (source ID: 19, lines: 93..94, bytes: 2853..2867), hits: 1)
--  runtime IC 182 -> Item 55: Line (location: (source ID: 19, lines: 102..105, bytes: 3086..3168), hits: 1)
--  runtime IC 182 -> Item 56: Function "name" (location: (source ID: 19, lines: 102..105, bytes: 3086..3168), hits: 1)
--  runtime IC 631 -> Item 57: Line (location: (source ID: 19, lines: 103..104, bytes: 3148..3161), hits: 1)
--  runtime IC 631 -> Item 58: Statement (location: (source ID: 19, lines: 103..104, bytes: 3148..3161), hits: 1)
--  runtime IC 474 -> Item 59: Line (location: (source ID: 19, lines: 106..109, bytes: 3174..3260), hits: 1)
--  runtime IC 474 -> Item 60: Function "symbol" (location: (source ID: 19, lines: 106..109, bytes: 3174..3260), hits: 1)
--  runtime IC 2073 -> Item 61: Line (location: (source ID: 19, lines: 107..108, bytes: 3238..3253), hits: 1)
--  runtime IC 2073 -> Item 62: Statement (location: (source ID: 19, lines: 107..108, bytes: 3238..3253), hits: 1)
--  runtime IC 338 -> Item 63: Line (location: (source ID: 19, lines: 110..113, bytes: 3266..3340), hits: 1)
--  runtime IC 338 -> Item 64: Function "decimals" (location: (source ID: 19, lines: 110..113, bytes: 3266..3340), hits: 1)
--  runtime IC 1509 -> Item 65: Line (location: (source ID: 19, lines: 111..112, bytes: 3324..3333), hits: 1)
--  runtime IC 1509 -> Item 66: Statement (location: (source ID: 19, lines: 111..112, bytes: 3324..3333), hits: 1)
--  runtime IC 260 -> Item 67: Line (location: (source ID: 19, lines: 114..117, bytes: 3346..3436), hits: 1)
--  runtime IC 260 -> Item 68: Function "totalSupply" (location: (source ID: 19, lines: 114..117, bytes: 3346..3436), hits: 1)
--  runtime IC 1111 -> Item 69: Line (location: (source ID: 19, lines: 115..116, bytes: 3409..3429), hits: 1)
--  runtime IC 1111 -> Item 70: Statement (location: (source ID: 19, lines: 115..116, bytes: 3409..3429), hits: 1)
--  runtime IC 396 -> Item 71: Line (location: (source ID: 19, lines: 118..121, bytes: 3442..3557), hits: 8)
--  runtime IC 396 -> Item 72: Function "balanceOf" (location: (source ID: 19, lines: 118..121, bytes: 3442..3557), hits: 8)
--  runtime IC 1963 -> Item 73: Line (location: (source ID: 19, lines: 119..120, bytes: 3525..3550), hits: 8)
--  runtime IC 1963 -> Item 74: Statement (location: (source ID: 19, lines: 119..120, bytes: 3525..3550), hits: 8)
--  runtime IC 532 -> Item 75: Line (location: (source ID: 19, lines: 122..126, bytes: 3563..3712), hits: 1)
--  runtime IC 532 -> Item 76: Function "transfer" (location: (source ID: 19, lines: 122..126, bytes: 3563..3712), hits: 1)
--  runtime IC 2781 -> Item 77: Line (location: (source ID: 19, lines: 123..124, bytes: 3650..3684), hits: 1)
--  runtime IC 2781 -> Item 78: Statement (location: (source ID: 19, lines: 123..124, bytes: 3650..3684), hits: 1)
--  runtime IC 2792 -> Item 79: Line (location: (source ID: 19, lines: 124..125, bytes: 3694..3705), hits: 0)
--  runtime IC 2792 -> Item 80: Statement (location: (source ID: 19, lines: 124..125, bytes: 3694..3705), hits: 0)
--  runtime IC 290 -> Item 81: Line (location: (source ID: 19, lines: 127..140, bytes: 3718..4181), hits: 4)
--  runtime IC 290 -> Item 82: Function "transferFrom" (location: (source ID: 19, lines: 127..140, bytes: 3718..4181), hits: 4)
--  runtime IC 1120 -> Item 83: Line (location: (source ID: 19, lines: 128..129, bytes: 3824..3882), hits: 4)
--  runtime IC 1120 -> Item 84: Statement (location: (source ID: 19, lines: 128..129, bytes: 3824..3882), hits: 4)
--  runtime IC 1244 -> Item 85: Line (location: (source ID: 19, lines: 129..130, bytes: 3896..3932), hits: 4)
--  runtime IC 1244 -> Item 86: Statement (location: (source ID: 19, lines: 129..130, bytes: 3896..3932), hits: 4)
--  runtime IC 1284 -> Item 87: Branch (branch: 5, path: 0) (location: (source ID: 19, lines: 129..135, bytes: 3934..4113), hits: 4)
--  runtime IC 1284 -> Item 88: Line (location: (source ID: 19, lines: 130..131, bytes: 3952..3977), hits: 4)
--  runtime IC 1284 -> Item 89: Statement (location: (source ID: 19, lines: 130..131, bytes: 3952..3977), hits: 4)
--  runtime IC 1292 -> Item 90: Branch (branch: 6, path: 0) (location: (source ID: 19, lines: 130..133, bytes: 3979..4048), hits: 1)
--  runtime IC 1292 -> Item 91: Line (location: (source ID: 19, lines: 131..132, bytes: 3997..4033), hits: 1)
--  runtime IC 1292 -> Item 92: Statement (location: (source ID: 19, lines: 131..132, bytes: 3997..4033), hits: 1)
--  runtime IC 1342 -> Item 93: Line (location: (source ID: 19, lines: 133..134, bytes: 4061..4102), hits: 3)
--  runtime IC 1342 -> Item 94: Statement (location: (source ID: 19, lines: 133..134, bytes: 4061..4102), hits: 3)
--  runtime IC 1485 -> Item 95: Line (location: (source ID: 19, lines: 136..137, bytes: 4123..4152), hits: 3)
--  runtime IC 1485 -> Item 96: Statement (location: (source ID: 19, lines: 136..137, bytes: 4123..4152), hits: 3)
--  runtime IC 1496 -> Item 97: Line (location: (source ID: 19, lines: 138..139, bytes: 4163..4174), hits: 2)
--  runtime IC 1496 -> Item 98: Statement (location: (source ID: 19, lines: 138..139, bytes: 4163..4174), hits: 2)
--  runtime IC 212 -> Item 99: Line (location: (source ID: 19, lines: 141..151, bytes: 4187..4492), hits: 3)
--  runtime IC 212 -> Item 100: Function "approve" (location: (source ID: 19, lines: 141..151, bytes: 4187..4492), hits: 3)
--  runtime IC 773 -> Item 101: Line (location: (source ID: 19, lines: 142..143, bytes: 4282..4304), hits: 3)
--  runtime IC 773 -> Item 102: Statement (location: (source ID: 19, lines: 142..143, bytes: 4282..4304), hits: 3)
--  runtime IC 824 -> Item 103: Branch (branch: 7, path: 0) (location: (source ID: 19, lines: 142..145, bytes: 4306..4357), hits: 1)
--  runtime IC 824 -> Item 104: Line (location: (source ID: 19, lines: 143..144, bytes: 4320..4346), hits: 1)
--  runtime IC 824 -> Item 105: Statement (location: (source ID: 19, lines: 143..144, bytes: 4320..4346), hits: 1)
--  runtime IC 874 -> Item 106: Line (location: (source ID: 19, lines: 146..147, bytes: 4367..4410), hits: 2)
--  runtime IC 874 -> Item 107: Statement (location: (source ID: 19, lines: 146..147, bytes: 4367..4410), hits: 2)
--  runtime IC 999 -> Item 108: Line (location: (source ID: 19, lines: 148..149, bytes: 4421..4464), hits: 2)
--  runtime IC 999 -> Item 109: Statement (location: (source ID: 19, lines: 148..149, bytes: 4421..4464), hits: 2)
--  runtime IC 1100 -> Item 110: Line (location: (source ID: 19, lines: 149..150, bytes: 4474..4485), hits: 2)
--  runtime IC 1100 -> Item 111: Statement (location: (source ID: 19, lines: 149..150, bytes: 4474..4485), hits: 2)
--  runtime IC 580 -> Item 112: Line (location: (source ID: 19, lines: 152..155, bytes: 4498..4645), hits: 3)
--  runtime IC 580 -> Item 113: Function "allowance" (location: (source ID: 19, lines: 152..155, bytes: 4498..4645), hits: 3)
--  runtime IC 2803 -> Item 114: Line (location: (source ID: 19, lines: 153..154, bytes: 4601..4638), hits: 3)
--  runtime IC 2803 -> Item 115: Statement (location: (source ID: 19, lines: 153..154, bytes: 4601..4638), hits: 3)
--  runtime IC 2931 -> Item 116: Line (location: (source ID: 19, lines: 160..176, bytes: 4835..5299), hits: 4)
--  runtime IC 2931 -> Item 117: Function "_transfer" (location: (source ID: 19, lines: 160..176, bytes: 4835..5299), hits: 4)
--  runtime IC 2932 -> Item 118: Line (location: (source ID: 19, lines: 161..162, bytes: 4921..4940), hits: 4)
--  runtime IC 2932 -> Item 119: Statement (location: (source ID: 19, lines: 161..162, bytes: 4921..4940), hits: 4)
--  runtime IC 2983 -> Item 120: Branch (branch: 8, path: 0) (location: (source ID: 19, lines: 161..164, bytes: 4942..4993), hits: 0)
--  runtime IC 2983 -> Item 121: Line (location: (source ID: 19, lines: 162..163, bytes: 4956..4982), hits: 0)
--  runtime IC 2983 -> Item 122: Statement (location: (source ID: 19, lines: 162..163, bytes: 4956..4982), hits: 0)
--  runtime IC 3033 -> Item 123: Line (location: (source ID: 19, lines: 164..165, bytes: 5006..5023), hits: 4)
--  runtime IC 3033 -> Item 124: Statement (location: (source ID: 19, lines: 164..165, bytes: 5006..5023), hits: 4)
--  runtime IC 3084 -> Item 125: Branch (branch: 9, path: 0) (location: (source ID: 19, lines: 164..167, bytes: 5025..5076), hits: 2)
--  runtime IC 3084 -> Item 126: Line (location: (source ID: 19, lines: 165..166, bytes: 5039..5065), hits: 2)
--  runtime IC 3084 -> Item 127: Statement (location: (source ID: 19, lines: 165..166, bytes: 5039..5065), hits: 2)
--  runtime IC 3134 -> Item 128: Line (location: (source ID: 19, lines: 167..168, bytes: 5089..5115), hits: 2)
--  runtime IC 3134 -> Item 129: Statement (location: (source ID: 19, lines: 167..168, bytes: 5089..5115), hits: 2)
--  runtime IC 3203 -> Item 130: Branch (branch: 10, path: 0) (location: (source ID: 19, lines: 167..170, bytes: 5117..5176), hits: 0)
--  runtime IC 3203 -> Item 131: Line (location: (source ID: 19, lines: 168..169, bytes: 5131..5165), hits: 0)
--  runtime IC 3203 -> Item 132: Statement (location: (source ID: 19, lines: 168..169, bytes: 5131..5165), hits: 0)
--  runtime IC 3253 -> Item 133: Line (location: (source ID: 19, lines: 171..172, bytes: 5186..5213), hits: 2)
--  runtime IC 3253 -> Item 134: Statement (location: (source ID: 19, lines: 171..172, bytes: 5186..5213), hits: 2)
--  runtime IC 3336 -> Item 135: Line (location: (source ID: 19, lines: 172..173, bytes: 5223..5248), hits: 2)
--  runtime IC 3336 -> Item 136: Statement (location: (source ID: 19, lines: 172..173, bytes: 5223..5248), hits: 2)
--  runtime IC 3419 -> Item 137: Line (location: (source ID: 19, lines: 174..175, bytes: 5259..5292), hits: 2)
--  runtime IC 3419 -> Item 138: Statement (location: (source ID: 19, lines: 174..175, bytes: 5259..5292), hits: 2)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 11.31s (11.31s CPU time)
 
+Ran 38 tests for test/unit/USDKEngineUnitTest.t.sol:USDKEngineUnitTest
+[PASS] testBurn() (gas: 238049)
+[PASS] testCalculateBonus() (gas: 7094)
+[PASS] testDeposit() (gas: 94216)
+[PASS] testDepositAndMint() (gas: 226586)
+[PASS] testFuzzBurnReducesDebt(uint256,uint256) (runs: 1000, μ: 249052, ~: 249040)
+[PASS] testFuzzCalculateBonus(uint256) (runs: 1000, μ: 7998, ~: 7556)
+[PASS] testFuzzCalculateHealthFactor(uint256,uint256) (runs: 609, μ: 11952, ~: 11952)
+[PASS] testFuzzCantMintAboveHealthFactor(uint256) (runs: 1000, μ: 222149, ~: 222390)
+[PASS] testFuzzDeposit(uint256) (runs: 1000, μ: 98596, ~: 97930)
+[PASS] testFuzzMintWithinHealthFactor(uint256,uint256) (runs: 1000, μ: 234207, ~: 233667)
+[PASS] testHealthFactorAfterMint() (gas: 226633)
+[PASS] testHealthFactorNoDebt() (gas: 88858)
+[PASS] testInitializationCorrectly() (gas: 98617)
+[PASS] testLiquidate() (gas: 489351)
+[PASS] testLiquidationAmountsMatchExecution() (gas: 474019)
+[PASS] testMint() (gas: 232787)
+[PASS] testRedeem() (gas: 106760)
+[PASS] testRedeemAndBurn() (gas: 269203)
+[PASS] testTotalDebtEqualsSupply() (gas: 390160)
+[PASS] test_RevertBurnMoreThanDebt() (gas: 234475)
+[PASS] test_RevertBurnZeroAmount() (gas: 87220)
+[PASS] test_RevertConstructorInvalidLiquidationThreshold() (gas: 136951)
+[PASS] test_RevertConstructorTokenParamsLengthMismatch() (gas: 76851)
+[PASS] test_RevertConstructorZeroTokenOrFeed() (gas: 137335)
+[PASS] test_RevertConstructorZeroUsdk() (gas: 71906)
+[PASS] test_RevertDepositUnsupportedToken() (gas: 16376)
+[PASS] test_RevertDepositWithoutApproval() (gas: 50994)
+[PASS] test_RevertDepositZeroAmount() (gas: 16443)
+[PASS] test_RevertLiquidateExceedMaxDebtToCover() (gas: 455717)
+[PASS] test_RevertLiquidateHealthyAccount() (gas: 96023)
+[PASS] test_RevertLiquidateNoCollateralOnToken() (gas: 458597)
+[PASS] test_RevertLiquidateZeroAccount() (gas: 22068)
+[PASS] test_RevertMintBreaksHealthFactor() (gas: 213386)
+[PASS] test_RevertMintZeroAmount() (gas: 87197)
+[PASS] test_RevertRedeemBreaksHealthFactor() (gas: 197148)
+[PASS] test_RevertRedeemMoreThanCollateral() (gas: 91785)
+[PASS] test_RevertStalePrice() (gas: 190909)
+[PASS] test_RevertZeroPrice() (gas: 239540)
+Suite result: ok. 38 passed; 0 failed; 0 skipped; finished in 24.37s (3.37s CPU time)
+
+Ran 8 tests for test/unit/USDKUnitTest.t.sol:USDKUnitTest
+[PASS] testAllowanceCorrect() (gas: 165231)
+[PASS] testCanAnyoneMintOrBurn() (gas: 97088)
+[PASS] testDeployWithZeroAddressOwner() (gas: 46471)
+[PASS] testFuzzTransfer(uint256) (runs: 1001, μ: 99634, ~: 99418)
+[PASS] testInitializationCorrectly() (gas: 34737)
+[PASS] testMintAndBurn() (gas: 90810)
+[PASS] testTransferInsufficientBalance() (gas: 94739)
+[PASS] testZeroAddress() (gas: 116476)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 24.37s (350.31ms CPU time)
+
+Ran 6 tests for test/invariant/EngineInvariant.t.sol:EngineInvariantTest
+[PASS] statefulFuzz_ghostAccountingMatchesSupply() (runs: 1000, calls: 32000, reverts: 0)
+
+╭---------------+----------------+-------+---------+----------╮
+| Contract      | Selector       | Calls | Reverts | Discards |
++=============================================================+
+| EngineHandler | burn           | 4008  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | deposit        | 4050  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | depositAndMint | 3916  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | liquidate      | 4014  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | mint           | 3940  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeem         | 4015  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeemAndBurn  | 3966  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | transferUsdk   | 4091  | 0       | 0        |
+╰---------------+----------------+-------+---------+----------╯
+
+[PASS] statefulFuzz_healthFactorOfBorrowers() (runs: 1000, calls: 32000, reverts: 0)
+
+╭---------------+----------------+-------+---------+----------╮
+| Contract      | Selector       | Calls | Reverts | Discards |
++=============================================================+
+| EngineHandler | burn           | 4008  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | deposit        | 4050  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | depositAndMint | 3916  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | liquidate      | 4014  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | mint           | 3940  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeem         | 4015  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeemAndBurn  | 3966  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | transferUsdk   | 4091  | 0       | 0        |
+╰---------------+----------------+-------+---------+----------╯
+
+[PASS] statefulFuzz_sumOfUserDebtsEqualsSupply() (runs: 1000, calls: 32000, reverts: 0)
+
+╭---------------+----------------+-------+---------+----------╮
+| Contract      | Selector       | Calls | Reverts | Discards |
++=============================================================+
+| EngineHandler | burn           | 4008  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | deposit        | 4050  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | depositAndMint | 3916  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | liquidate      | 4014  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | mint           | 3940  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeem         | 4015  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeemAndBurn  | 3966  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | transferUsdk   | 4091  | 0       | 0        |
+╰---------------+----------------+-------+---------+----------╯
+
+[PASS] statefulFuzz_usdkBalancesEqualSupply() (runs: 1000, calls: 32000, reverts: 0)
+
+╭---------------+----------------+-------+---------+----------╮
+| Contract      | Selector       | Calls | Reverts | Discards |
++=============================================================+
+| EngineHandler | burn           | 4008  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | deposit        | 4050  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | depositAndMint | 3916  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | liquidate      | 4014  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | mint           | 3940  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeem         | 4015  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeemAndBurn  | 3966  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | transferUsdk   | 4091  | 0       | 0        |
+╰---------------+----------------+-------+---------+----------╯
+
+[PASS] statefulFuzz_wbtcCollateralBalance() (runs: 1000, calls: 32000, reverts: 0)
+
+╭---------------+----------------+-------+---------+----------╮
+| Contract      | Selector       | Calls | Reverts | Discards |
++=============================================================+
+| EngineHandler | burn           | 4008  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | deposit        | 4050  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | depositAndMint | 3916  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | liquidate      | 4014  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | mint           | 3940  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeem         | 4015  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeemAndBurn  | 3966  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | transferUsdk   | 4091  | 0       | 0        |
+╰---------------+----------------+-------+---------+----------╯
+
+[PASS] statefulFuzz_wethCollateralBalance() (runs: 1000, calls: 32000, reverts: 0)
+
+╭---------------+----------------+-------+---------+----------╮
+| Contract      | Selector       | Calls | Reverts | Discards |
++=============================================================+
+| EngineHandler | burn           | 4008  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | deposit        | 4050  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | depositAndMint | 3916  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | liquidate      | 4014  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | mint           | 3940  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeem         | 4015  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | redeemAndBurn  | 3966  | 0       | 0        |
+|---------------+----------------+-------+---------+----------|
+| EngineHandler | transferUsdk   | 4091  | 0       | 0        |
+╰---------------+----------------+-------+---------+----------╯
+
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 28.19s (134.75s CPU time)
+
+Ran 4 test suites in 28.20s (88.24s CPU time): 53 tests passed, 0 failed, 0 skipped (53 total tests)
+
+╭------------------------------------+------------------+------------------+----------------+-----------------╮
+| File                               | % Lines          | % Statements     | % Branches     | % Funcs         |
++=============================================================================================================+
+| script/DeployUSDK.s.sol            | 78.26% (18/23)   | 80.00% (20/25)   | 100.00% (0/0)  | 50.00% (1/2)    |
+|------------------------------------+------------------+------------------+----------------+-----------------|
+| script/HelperConfig.s.sol          | 77.78% (14/18)   | 83.33% (15/18)   | 25.00% (1/4)   | 75.00% (3/4)    |
+|------------------------------------+------------------+------------------+----------------+-----------------|
+| src/USDK.sol                       | 94.12% (64/68)   | 94.12% (48/51)   | 81.82% (9/11)  | 94.12% (16/17)  |
+|------------------------------------+------------------+------------------+----------------+-----------------|
+| src/USDKEngine.sol                 | 92.90% (170/183) | 93.30% (181/194) | 59.26% (16/27) | 100.00% (36/36) |
+|------------------------------------+------------------+------------------+----------------+-----------------|
+| test/invariant/EngineHandler.t.sol | 85.32% (93/109)  | 81.75% (103/126) | 89.47% (17/19) | 78.57% (11/14)  |
+|------------------------------------+------------------+------------------+----------------+-----------------|
+| test/invariant/Handler.t.sol       | 82.98% (39/47)   | 79.07% (34/43)   | 100.00% (1/1)  | 75.00% (6/8)    |
+|------------------------------------+------------------+------------------+----------------+-----------------|
+| test/mock/ERC20Mock.sol            | 50.00% (2/4)     | 50.00% (1/2)     | 100.00% (0/0)  | 50.00% (1/2)    |
+|------------------------------------+------------------+------------------+----------------+-----------------|
+| test/mock/MockAddress.t.sol        | 100.00% (8/8)    | 100.00% (7/7)    | 100.00% (0/0)  | 100.00% (1/1)   |
+|------------------------------------+------------------+------------------+----------------+-----------------|
+| test/mock/MockV3Aggregator.sol     | 52.17% (12/23)   | 52.94% (9/17)    | 100.00% (0/0)  | 50.00% (3/6)    |
+|------------------------------------+------------------+------------------+----------------+-----------------|
+| Total                              | 86.96% (420/483) | 86.54% (418/483) | 70.97% (44/62) | 86.67% (78/90)  |
+╰------------------------------------+------------------+------------------+----------------+-----------------╯

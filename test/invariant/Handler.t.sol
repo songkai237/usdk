@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {USDK} from "../../src/USDK.sol";
 import {MockAddress} from "../mock/MockAddress.t.sol";
 
-contract Handler is Test, MockAddress {
+contract TokenHandler is Test, MockAddress {
     USDK public usdk;
 
     string public name = "USDK Token";

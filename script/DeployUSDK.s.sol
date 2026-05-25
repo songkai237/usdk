@@ -12,16 +12,31 @@ contract DeployUSDK is Script {
     address[] public tokenAddresses;
     address[] public priceFeedAddresses;
     uint256[] public liquidationThresholds;
-    address public owner = makeAddr("owner");
 
     function run() public returns (USDK, USDKEngine, HelperConfig.NetworkConfig memory) {
-        vm.startBroadcast(owner);
-        (USDK usdk, USDKEngine engine, HelperConfig.NetworkConfig memory networkConfig) = deploy();
+        _loadConfig();
+
+        vm.startBroadcast(config.deployerKey);
+        address deployer = vm.addr(config.deployerKey);
+        (USDK usdk, USDKEngine engine) = _deployContracts(deployer);
         vm.stopBroadcast();
-        return (usdk, engine, networkConfig);
+
+        return (usdk, engine, config);
     }
 
+    /// @dev 供单元/不变量测试使用，不广播链上交易
     function deploy() public returns (USDK, USDKEngine, HelperConfig.NetworkConfig memory) {
+        _loadConfig();
+
+        address testOwner = makeAddr("owner");
+        vm.startPrank(testOwner);
+        (USDK usdk, USDKEngine engine) = _deployContracts(testOwner);
+        vm.stopPrank();
+
+        return (usdk, engine, config);
+    }
+
+    function _loadConfig() internal {
         HelperConfig hc = new HelperConfig();
         config = hc.getActiveNetworkConfig();
 
@@ -35,13 +50,11 @@ contract DeployUSDK is Script {
         priceFeedAddresses.push(config.wbtcUsdPriceFeed);
         liquidationThresholds.push(8000);
         liquidationThresholds.push(7000);
+    }
 
-        vm.startPrank(owner);
-        USDK usdk = new USDK("USDK", "USDK", owner);
-        USDKEngine engine = new USDKEngine(address(usdk), tokenAddresses, priceFeedAddresses, liquidationThresholds);
+    function _deployContracts(address owner) private returns (USDK usdk, USDKEngine engine) {
+        usdk = new USDK("USDK", "USDK", owner);
+        engine = new USDKEngine(address(usdk), tokenAddresses, priceFeedAddresses, liquidationThresholds);
         usdk.transferOwnership(address(engine));
-        vm.stopPrank();
-
-        return (usdk, engine, config);
     }
 }

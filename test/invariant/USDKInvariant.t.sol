@@ -4,10 +4,10 @@ pragma solidity 0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {USDK} from "../../src/USDK.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
-import {Handler} from "./Handler.t.sol";
+import {TokenHandler} from "./Handler.t.sol";
 
 contract USDKInvariantTest is StdInvariant, Test {
-    Handler public handler;
+    TokenHandler public handler;
     USDK public usdk;
 
     address public owner = makeAddr("owner");
@@ -16,7 +16,7 @@ contract USDKInvariantTest is StdInvariant, Test {
 
     function setUp() public {
         usdk = new USDK(name, symbol, owner);
-        handler = new Handler(usdk);
+        handler = new TokenHandler(usdk);
 
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = handler.mint.selector;

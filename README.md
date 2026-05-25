@@ -1,30 +1,42 @@
 # USDK
 
-实现一套**可控 Mint / Burn** 的 ERC-20 稳定币（`USDK`），以及基于超额抵押的 `**USDKEngine`** 借贷与清算逻辑。代币发行由单一 `owner` 管控，链上引擎负责在抵押充足时增发、在还款或清算时销毁。
+**可控 Mint / Burn** 的 ERC-20 稳定币（`USDK`），以及基于超额抵押的 `**USDKEngine`** 借贷与清算逻辑。代币增发权由 `owner` 管控；部署后将 `owner` 交给 Engine，用户仅能通过抵押路径铸造/销毁债务代币。
+
+> 用于学习 Foundry、ERC-20、Chainlink 预言机与 CDP 风控，**非生产级代码**。
+
+## 目录
+
+- [功能概览](#功能概览)
+- [架构](#架构)
+- [核心公式](#核心公式)
+- [项目结构](#项目结构)
+- [快速开始](#快速开始)
+- [部署](#部署)
+- [测试](#测试)
 
 ## 功能概览
 
 
-| 模块                                   | 职责                                                                           |
-| ------------------------------------ | ---------------------------------------------------------------------------- |
-| `[USDK](src/USDK.sol)`               | 标准 ERC-20；仅 `owner` 可 `mint` / `burn`；支持 `transfer`、`approve`、`transferFrom` |
-| `[USDKEngine](src/USDKEngine.sol)`   | 多抵押品存取、铸造/偿还债务、健康因子校验、Chainlink 定价、清算                                        |
-| `[IERC20](src/interface/IERC20.sol)` | 最小 ERC-20 接口（参考 [EIP-20](https://eips.ethereum.org/EIPS/eip-20)）             |
+| 模块                                 | 职责                                                            |
+| ---------------------------------- | ------------------------------------------------------------- |
+| [USDK](src/USDK.sol)               | 标准 ERC-20；仅 `owner` 可 `mint` / `burn`                         |
+| [USDKEngine](src/USDKEngine.sol)   | 多抵押品存取、铸还债务、健康因子、Chainlink 定价、清算                              |
+| [IERC20](src/interface/IERC20.sol) | 最小 ERC-20 接口（[EIP-20](https://eips.ethereum.org/EIPS/eip-20)） |
 
 
 ### USDK（稳定币层）
 
-- **权限化供应**：`mint` / `burn` 受 `onlyOwner` 限制，避免任意地址增发。
-- **标准转账**：18 位小数，完整实现 `name`、`symbol`、`balanceOf`、`transfer`、`approve` 等。
-- **所有权转移**：`changeOwner` 可将铸币权限交给新地址（部署后通常将 `owner` 设为 `USDKEngine` 合约地址）。
+- **权限化供应**：`mint` / `burn` 受 `onlyOwner` 限制
+- **标准 ERC-20**：18 位小数，`transfer` / `approve` / `transferFrom`
+- **所有权**：`transferOwnership` / `changeOwner` 将铸币权交给 Engine
 
 ### USDKEngine（抵押与清算层）
 
-- **多抵押品**：构造函数配置抵押代币、Chainlink `priceFeed` 与清算阈值（`liquidationThreshold`，单位 1e4）。
-- **存取与铸还**：`deposit` / `redeem`、`mint` / `burn`，以及组合操作 `depositAndMint`、`redeemAndBurn`。
-- **健康因子**：抵押品 USD 价值（含清算阈值折扣）÷ 债务；低于 `1e18` 时禁止增债或赎回导致恶化。
-- **清算**：健康账户不可清算；单次最多清偿账户债务的 50%；清算人支付 USDK 并获得带 **10%** 奖励的抵押品。
-- **安全**：`ReentrancyGuard`、价格必须为正且更新时间在 **2 小时**内。
+- **多抵押品**：WETH / WBTC + Chainlink 喂价 + 清算阈值（`liquidationThreshold`，精度 `1e4`）
+- **存取与铸还**：`deposit` / `redeem`、`mint` / `burn`、`depositAndMint`、`redeemAndBurn`
+- **健康因子**：加权抵押 USD 价值 ÷ 债务；`healthFactor < 1e18` 时禁止恶化仓位的操作
+- **清算**：仅不健康账户；单次最多清偿债务的 **50%**；清算人获得 **10%** 抵押品奖励
+- **安全**：`ReentrancyGuard`；喂价须为正且 **2 小时内**更新
 
 ## 架构
 
@@ -39,61 +51,73 @@ flowchart LR
     User -->|存入抵押品| Engine
     User -->|mint / burn 债务| Engine
     Engine -->|mint / burn| Token
-    Engine -->|持有抵押品| Collateral
+    Engine -->|托管抵押品| Collateral
     Engine -->|latestRoundData| Oracle
     User -->|transfer USDK| Token
 ```
 
 
 
-部署建议：
+**推荐部署顺序**
 
-1. 部署 `USDK(name, symbol, deployer)`。
-2. 部署 `USDKEngine(usdk, collateralTokens, priceFeeds, liquidationThresholds)`。
-3. 调用 `USDK.changeOwner(address(engine))`，使只有引擎能增发/销毁。
+1. 部署 `USDK("USDK", "USDK", deployer)`
+2. 部署 `USDKEngine(usdk, tokens, priceFeeds, thresholds)`
+3. `usdk.transferOwnership(address(engine))` — 仅 Engine 可增发/销毁
 
 ## 核心公式
 
-**健康因子**（`healthFactor >= 1e18` 为安全）：
+**健康因子**（`>= 1e18` 为安全）：
 
 ```
 healthFactor = Σ(抵押数量 × USD 单价 × liquidationThreshold / 1e4) / 债务（USDK）
 ```
 
-无债务时健康因子为 `type(uint256).max`。
+无债务时 `healthFactor = type(uint256).max`。
 
-**清算奖励**：清偿债务的 10%（`LIQUIDATION_BONUS = 1000`，精度 `1e4`）。
+**清算奖励**：`bonus = debtToCover × 1000 / 10000`（10%）。
 
 ## 项目结构
 
 ```
 usdk/
 ├── src/
-│   ├── USDK.sol              # ERC-20 稳定币
-│   ├── USDKEngine.sol        # 抵押借贷引擎
+│   ├── USDK.sol
+│   ├── USDKEngine.sol
 │   └── interface/IERC20.sol
+├── script/
+│   ├── DeployUSDK.s.sol      # deploy() 供测试；run() 供链上广播
+│   └── HelperConfig.s.sol    # Anvil Mock / Sepolia 配置
 ├── test/
-│   ├── unit/                 # 单元测试
-│   ├── invariant/            # USDK 状态不变量（总供应 = 余额之和）
+│   ├── unit/
+│   │   ├── USDKUnitTest.t.sol        # 8 用例 + fuzz
+│   │   └── USDKEngineUnitTest.t.sol  # 38 用例 + fuzz
+│   ├── invariant/
+│   │   ├── USDKInvariant.t.sol       # Token 层会计不变量
+│   │   ├── EngineInvariant.t.sol     # Engine 层会计不变量
+│   │   ├── Handler.t.sol             # TokenHandler
+│   │   └── EngineHandler.t.sol
 │   └── mock/
-├── lib/                      # Git 子模块：forge-std、OpenZeppelin、Chainlink
+│       ├── ERC20Mock.sol
+│       ├── MockV3Aggregator.sol
+│       └── MockAddress.t.sol
+├── lib/                      # forge-std、OpenZeppelin、Chainlink（子模块）
 ├── foundry.toml
 └── .github/workflows/test.yml
 ```
 
 ## 技术栈
 
-- [Foundry](https://book.getfoundry.sh/) — 编译、测试、格式化
+- [Foundry](https://book.getfoundry.sh/) — 编译、测试、部署
 - Solidity **0.8.24**
-- [OpenZeppelin](https://github.com/openzeppelin/openzeppelin-contracts) — `ReentrancyGuard`
-- [Chainlink](https://github.com/smartcontractkit/chainlink-evm) — `AggregatorV3Interface` 价格源
+- [OpenZeppelin](https://github.com/openzeppelin/openzeppelin-contracts) — `ReentrancyGuard`、ERC-20 Mock
+- [Chainlink](https://github.com/smartcontractkit/chainlink-evm) — `AggregatorV3Interface`
 
 ## 快速开始
 
 ### 环境要求
 
-- [Foundry](https://book.getfoundry.sh/getting-started/installation)（`forge`、`cast`）
-- Git（用于拉取子模块）
+- [Foundry](https://book.getfoundry.sh/getting-started/installation)
+- Git（子模块）
 
 ### 克隆与依赖
 
@@ -103,93 +127,110 @@ cd usdk
 git submodule update --init --recursive
 ```
 
-若子模块未初始化，也可执行：
-
-```bash
-forge install
-```
-
 ### 编译
 
 ```bash
 forge build
 ```
 
-### 测试
+## 部署
+
+[HelperConfig](script/HelperConfig.s.sol) 按 `chainid` 选择环境：
+
+
+| 网络      | chainId  | 说明                                                       |
+| ------- | -------- | -------------------------------------------------------- |
+| Anvil   | 31337    | 自动部署 Mock ERC-20 + MockV3Aggregator（ETH $2000、BTC $4000） |
+| Sepolia | 11155111 | 使用预设代币与 Chainlink 喂价地址                                   |
+
 
 ```bash
-# 全部测试（verbose）
-forge test -vvv
+# 本地 Anvil
+anvil
+forge script script/DeployUSDK.s.sol:DeployUSDK --rpc-url http://127.0.0.1:8545 --broadcast
 
-# 仅 USDK 单元测试
-forge test --match-path test/unit/USDKUnitTest.t.sol -vvv
-
-# USDK 不变量测试（fuzz + handler）
-forge test --match-path test/invariant/ -vvv
-
-# 格式化检查（与 CI 一致）
-forge fmt --check
+# Sepolia（需配置 PRIVATE_KEY）
+forge script script/DeployUSDK.s.sol:DeployUSDK --rpc-url $SEPOLIA_RPC_URL --broadcast
 ```
 
-当前 `test/unit/USDKEngineUnitTest.t.sol` 仍为占位骨架，完整引擎测试待补充；`USDK` 单元测试与不变量测试可独立运行。
+| 方法 | 用途 |
+|------|------|
+| `run()` | 链上部署：`vm.startBroadcast(config.deployerKey)`，owner = `vm.addr(deployerKey)` |
+| `deploy()` | 测试专用：`makeAddr("owner")` + `prank`，不广播 |
 
-### 覆盖率（可选）
+Sepolia 需在环境变量配置 `PRIVATE_KEY`；Anvil 默认使用第 0 号测试账户私钥（见 `HelperConfig`）。
+
+## 测试
+
+当前 **53** 个测试全部通过（单元 + fuzz + 状态不变量）。
 
 ```bash
+# 全部
+forge test -vvv
+
+# 按模块
+forge test --match-path test/unit/USDKUnitTest.t.sol
+forge test --match-path test/unit/USDKEngineUnitTest.t.sol
+forge test --match-path test/invariant/USDKInvariant.t.sol
+forge test --match-path test/invariant/EngineInvariant.t.sol
+
+# 格式化（与 CI 一致）
+forge fmt --check
+
+# 覆盖率
 forge coverage
 ```
 
-## 主要合约 API（摘要）
+### 单元测试
+
+
+| 文件                                                             | 覆盖要点                                                  |
+| -------------------------------------------------------------- | ----------------------------------------------------- |
+| [USDKUnitTest.t.sol](test/unit/USDKUnitTest.t.sol)             | 初始化、权限、mint/burn、零地址、allowance、`transferFrom`、fuzz 转账 |
+| [USDKEngineUnitTest.t.sol](test/unit/USDKEngineUnitTest.t.sol) | 存取/铸还/清算、构造函数与预言机 revert、健康因子、会计一致性、fuzz              |
+
+
+### 状态不变量（Stateful Fuzz）
+
+
+| 套件                                                      | 不变量                                                                             |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| [USDKInvariant](test/invariant/USDKInvariant.t.sol)     | `Σ balance == totalSupply`；与 ghost mint/burn 一致                                 |
+| [EngineInvariant](test/invariant/EngineInvariant.t.sol) | `Σ 用户债务 == totalSupply`；抵押品托管守恒；USDK 余额之和等于 supply；ghost 账本一致；有债用户 `HF >= 1e18` |
+
+
+`foundry.toml` 中 `[invariant] fail_on_revert = false`，Handler 允许操作 revert 而不中断模糊序列。
+
+## 主要 API
 
 ### USDK
 
 
-| 函数                                | 说明                  |
-| --------------------------------- | ------------------- |
-| `mint(address to, uint256 value)` | `onlyOwner`，增发      |
-| `burn(uint256 value)`             | `onlyOwner`，销毁调用者余额 |
-| `changeOwner(address newOwner)`   | 转移铸币权限              |
+| 函数                                    | 说明                  |
+| ------------------------------------- | ------------------- |
+| `mint(address to, uint256 value)`     | `onlyOwner` 增发      |
+| `burn(uint256 value)`                 | `onlyOwner` 销毁调用者余额 |
+| `transferOwnership(address newOwner)` | 转移铸币权               |
 
 
 ### USDKEngine
 
 
-| 函数                                                      | 说明              |
-| ------------------------------------------------------- | --------------- |
-| `deposit` / `redeem`                                    | 存入 / 取回抵押品      |
-| `mint` / `burn`                                         | 增发 / 偿还 USDK 债务 |
-| `depositAndMint` / `redeemAndBurn`                      | 组合操作            |
-| `liquidate(account, collateralToken, debtToCover)`      | 清算不健康账户         |
-| `getHealthFactor` / `getUserDebt` / `getUserCollateral` | 只读查询            |
+| 函数                                                      | 说明                      |
+| ------------------------------------------------------- | ----------------------- |
+| `deposit` / `redeem`                                    | 存入 / 取回抵押品              |
+| `mint` / `burn`                                         | 增发 / 偿还 USDK 债务         |
+| `depositAndMint` / `redeemAndBurn`                      | 组合操作                    |
+| `liquidate(account, collateralToken, debtToCover)`      | 清算不健康账户                 |
+| `getHealthFactor` / `getUserDebt` / `getUserCollateral` | 只读查询                    |
+| `getTotalDebt`                                          | 等于 `USDK.totalSupply()` |
 
-
-## 测试说明
-
-- **单元测试** `[test/unit/USDKUnitTest.t.sol](test/unit/USDKUnitTest.t.sol)`：初始化、权限、mint/burn、零地址、allowance、`transferFrom`、fuzz 转账等。
-- **不变量测试** `[test/invariant/USDKInvariant.t.sol](test/invariant/USDKInvariant.t.sol)`：在随机 mint/burn/transfer 序列下，断言 `sum(balance) == totalSupply` 且与 ghost 计数一致。
-- **引擎测试**：`[test/unit/USDKEngineUnitTest.t.sol](test/unit/USDKEngineUnitTest.t.sol)` 待实现（需 Mock 抵押品与 Chainlink 喂价）。
-
-## CI
-
-推送或 PR 时在 GitHub Actions 中执行：
-
-1. `forge fmt --check`
-2. `forge build --sizes`
-3. `forge test -vvv`
-
-见 `[.github/workflows/test.yml](.github/workflows/test.yml)`。
 
 ## 设计说明与局限
 
-- **中心化铸币权**：`USDK` 的 `owner` 拥有绝对增发权，适合模拟机构稳定币，需链下治理与多签等机制才能接近生产要求。
-- **引擎即 minter**：生产部署应将 `USDK.owner` 设为 `USDKEngine`，用户只能通过引擎路径产生债务代币。
-- **价格依赖**：依赖 Chainlink 喂价新鲜度（`MAX_DELAY = 2 hours`），未涵盖预言机操纵的完整防御。
-- **练习范围**：未实现暂停、黑名单、升级代理、多签 `owner` 等常见企业功能。
+- **中心化铸币权**：`USDK.owner` 拥有绝对增发权，适合模拟机构稳定币；生产环境需多签/治理
+- **Engine 为唯一 minter**：用户债务代币仅能通过 Engine 产生与销毁
+- **预言机依赖**：2 小时价格新鲜度检查，未覆盖完整操纵防御
+- **清算约束**：深度 underwater 时单次清算可能因 `HealthFactorMustBeRaised` 失败
+- **练习范围**：无暂停、冻结、升级代理、访问控制角色等企业级能力
 
-## 作者
-
-SongKai
-
-## License
-
-MIT
