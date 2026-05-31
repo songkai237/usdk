@@ -2,7 +2,9 @@
 
 **可控 Mint / Burn** 的 ERC-20 稳定币（`USDK`），以及基于超额抵押的 `**USDKEngine`** 借贷与清算逻辑。代币增发权由 `owner` 管控；部署后将 `owner` 交给 Engine，用户仅能通过抵押路径铸造/销毁债务代币。
 
-> 用于学习 Foundry、ERC-20、Chainlink 预言机与 CDP 风控，**非生产级代码**。
+> 用于学习 Foundry、ERC-20、Chainlink 预言机与 CDP 风控，**非生产级代码**。 
+
+![image](./dashboard.png) 
 
 ## 目录
 
@@ -85,8 +87,13 @@ usdk/
 │   ├── USDKEngine.sol
 │   └── interface/IERC20.sol
 ├── script/
-│   ├── DeployUSDK.s.sol      # deploy() 供测试；run() 供链上广播
-│   └── HelperConfig.s.sol    # Anvil Mock / Sepolia 配置
+│   ├── DeployUSDK.s.sol
+│   ├── WriteDeployment.s.sol # 部署并写入 deployments/
+│   └── HelperConfig.s.sol
+├── backend/                  # Go 只读 BFF
+├── frontend/                 # React + wagmi
+├── deployments/
+│   └── 31337.json
 ├── test/
 │   ├── unit/
 │   │   ├── USDKUnitTest.t.sol        # 8 用例 + fuzz
@@ -159,6 +166,55 @@ forge script script/DeployUSDK.s.sol:DeployUSDK --rpc-url $SEPOLIA_RPC_URL --bro
 | `deploy()` | 测试专用：`makeAddr("owner")` + `prank`，不广播 |
 
 Sepolia 需在环境变量配置 `PRIVATE_KEY`；Anvil 默认使用第 0 号测试账户私钥（见 `HelperConfig`）。
+
+## Web UI
+
+Go 只读 BFF + React 前端，连接 Anvil 本地链。写操作通过 MetaMask 签名，读操作走 Go API 聚合。
+
+### 环境
+
+- Node.js 20+
+- Go 1.21+
+- MetaMask（添加 Anvil：RPC `http://127.0.0.1:8545`，chainId `31337`）
+
+### 启动
+
+```bash
+# 1. 本地链
+make anvil
+
+# 2. 部署并导出 deployments/31337.json + ABI
+make deploy-anvil
+
+# 3. 后端 (8080) + 前端 (5173)
+make backend    # 新终端
+make frontend   # 新终端
+```
+
+### 功能
+
+| 面板 | 说明 |
+|------|------|
+| Dashboard | 仓位、健康因子、债务、抵押明细 |
+| 操作 | Faucet、存款/取款、铸币/还币、存款并铸币 |
+| 清算 | 输入被清算地址、预览、执行 liquidate |
+| Dev | Mock 预言机改价（演示清算） |
+
+### API（Go BFF）
+
+| 路径 | 说明 |
+|------|------|
+| `GET /api/config` | 合约地址与抵押品列表 |
+| `GET /api/position/{address}` | 聚合仓位 |
+| `GET /api/position/{address}/health` | 健康因子 |
+| `GET /api/liquidation/preview` | 清算预览 |
+| `GET /api/prices` | WETH/WBTC 价格 |
+
+### 联调场景
+
+1. 账户 A：Faucet → 存款 → 铸币 USDK，Dashboard 显示 HF ≥ 1.0
+2. Dev 面板将 WETH 价格降至 $1700
+3. 账户 B：铸币获得 USDK → 清算账户 A
 
 ## 测试
 

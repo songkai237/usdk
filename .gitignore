@@ -13,4 +13,9 @@ docs/
 # Dotenv file
 .env
 
+# Web UI
+frontend/node_modules/
+frontend/dist/
+backend/bin/
+
 .vscode/
